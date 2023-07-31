@@ -1,0 +1,37 @@
+<html>
+    <head>
+        <title>단테 알러지 검사결과</title>
+    </head>
+    <script src="allergy.js"></script>
+    <script>
+        function show_result(parameter) {
+            let ige, non_ige = "검사결과없음";
+            ige = search_ige(ige, parameter);
+            non_ige = search_nonIgE(non_ige, parameter);
+
+            document.getElementById("ige_result").value = ige;
+            document.getElementById("nonige_result").value = non_ige;
+        }
+
+        function search_ige(ige, parameter) {
+            if (allergy_IgE.has(parameter)) {
+                ige = allergy_IgE[parameter]
+            } 
+            return ige;
+        }
+
+        function search_nonIgE(non_ige, parameter) {
+            if (allergy_nonIgE.has(parameter)) {
+                non_ige = allergy_nonIgE[parameter]
+            }
+            return non_ige;
+        }
+    </script>
+    <body>
+        <br/> 수치가 1.0 이상일 경우 먹으면 안됨 / 검사결과가 없는 경우 문의 필요
+        <br/> * 우유는 0이 나오지만 뱃속에서 소화된 후 나오는 효소에 알러지가 있어서 섭취 불가능
+        <br/> <input type="text" /><button>확인하기</button>
+        <br/> 즉발성 알러지 수치 : <span id="ige_result"></span>
+        <br/> 지연성 알러지 수치 : <span id="nonige_result"></span>
+    </body>
+</html>

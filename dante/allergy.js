@@ -180,3 +180,16 @@ const allergy_nonIgE = {
     , "꿀" : 2.1
     , "글루텐" : 0.8
 }
+function search_ige(ige, parameter) {
+      if (allergy_IgE.has(parameter)) {
+          ige = allergy_IgE[parameter]
+      } 
+      return ige;
+}
+
+function search_nonIgE(non_ige, parameter) {
+      if (allergy_nonIgE.has(parameter)) {
+          non_ige = allergy_nonIgE[parameter]
+      }
+      return non_ige;
+}

@@ -41,8 +41,8 @@
     <body>
         <br/> 수치가 1.0 이상일 경우 먹으면 안됨 / 검사결과가 없는 경우 문의 필요
         <br/> * 우유는 0이 나오지만 뱃속에서 소화된 후 나오는 효소에 알러지가 있어서 섭취 불가능
-        <br/> <input type="text" id="param" /> 
-        <input type="button" value="확인하기" onclick="show_result()" onkeyup="enterkey(event)" /> 
+        <br/> <input type="text" id="param" onkeyup="enterkey(event)" /> 
+        <input type="button" value="확인하기" onclick="show_result()" /> 
         <br/> 즉발성 알러지 수치 : <span id="ige_result"></span>
         <br/> 지연성 알러지 수치 : <span id="nonige_result"></span>
     </body>

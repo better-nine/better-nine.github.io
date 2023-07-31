@@ -14,6 +14,21 @@
             document.getElementById("ige_result").value = ige;
             document.getElementById("nonige_result").value = non_ige;
         }
+        
+        function search_ige(ige, parameter) {
+            if (allergy_IgE.has(parameter)) {
+            ige = allergy_IgE[parameter]
+            } 
+            return ige;
+        }
+        
+        function search_nonIgE(non_ige, parameter) {
+            if (allergy_nonIgE.has(parameter)) {
+            non_ige = allergy_nonIgE[parameter]
+            }
+            return non_ige;
+        }
+
     </script>
     <body>
         <br/> 수치가 1.0 이상일 경우 먹으면 안됨 / 검사결과가 없는 경우 문의 필요

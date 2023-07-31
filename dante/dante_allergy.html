@@ -7,7 +7,8 @@
         function show_result() {
             let parameter = document.getElementById("param").value;
             
-            let ige, non_ige = "검사결과없음";
+            let ige = "검사결과없음";
+            let non_ige = "검사결과없음";
             ige = search_ige(ige, parameter);
             non_ige = search_nonIgE(non_ige, parameter);
 

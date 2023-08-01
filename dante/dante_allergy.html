@@ -5,32 +5,36 @@
     </head>
     <script src="allergy.js"></script>
     <script type="text/javascript">
+        const allergy_IgE_keys = allergy_IgE.keys();
+        const allergy_nonIgE_keys = allergy_nonIgE.keys();
+            
         function show_result() {
             let parameter = document.getElementById("param").value;
             
-            let ige = "검사결과없음";
-            let non_ige = "검사결과없음";
-            ige = search_ige(ige, parameter);
-            non_ige = search_nonIgE(non_ige, parameter);
+            document.getElementById("ige_result").innerHTML = compare_IgE_key(parameter);
+            document.getElementById("nonige_result").innerHTML = compare_nonIgE_key(parameter);
+        }
 
-            document.getElementById("ige_result").innerHTML = ige;
-            document.getElementById("nonige_result").innerHTML = non_ige;
-        }
-        
-        function search_ige(ige, parameter) {
-            if (allergy_IgE.hasOwnProperty(parameter)) {
-            ige = allergy_IgE[parameter]
-            } 
-            return ige;
-        }
-        
-        function search_nonIgE(non_ige, parameter) {
-            if (allergy_nonIgE.hasOwnProperty(parameter)) {
-            non_ige = allergy_nonIgE[parameter]
+        function compare_IgE_key(parameter){
+            for (let i = 0; i < allergy_IgE_keys.length; i++) {
+                var key_name = allergy_IgE_keys[index];
+                if (key_name.includes(parameter)) {
+                    return allergy_IgE[key_name];
+                }
             }
-            return non_ige;
+            return "검사결과없음";
         }
 
+       function compare_nonIgE_key(parameter){
+            for (let i = 0; i < allergy_nonIgE_keys.length; i++) {
+                var key_name = allergy_nonIgE_keys[index];
+                if (key_name.includes(parameter)) {
+                    return allergy_nonIgE[key_name];
+                }
+            }
+           return "검사결과없음";
+        }
+        
         function enterkey(e) {
         	if (e.keyCode == 13) {
             	show_result();

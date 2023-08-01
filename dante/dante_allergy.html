@@ -22,7 +22,7 @@
             for (let i = 0; i < allergy_IgE_keys.length; i++) {
                 var key_name = allergy_IgE_keys[i];
                 if (key_name.includes(parameter)) {
-                     document.getElementById("param").innerHTML = key_name;
+                     document.getElementById("param").value = key_name;
                     return allergy_IgE[key_name];
                 }
             }

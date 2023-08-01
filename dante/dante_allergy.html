@@ -17,7 +17,7 @@
 
         function compare_IgE_key(parameter){
             for (let i = 0; i < allergy_IgE_keys.length; i++) {
-                var key_name = allergy_IgE_keys[index];
+                var key_name = allergy_IgE_keys[i];
                 if (key_name.includes(parameter)) {
                     return allergy_IgE[key_name];
                 }
@@ -27,7 +27,7 @@
 
        function compare_nonIgE_key(parameter){
             for (let i = 0; i < allergy_nonIgE_keys.length; i++) {
-                var key_name = allergy_nonIgE_keys[index];
+                var key_name = allergy_nonIgE_keys[i];
                 if (key_name.includes(parameter)) {
                     return allergy_nonIgE[key_name];
                 }

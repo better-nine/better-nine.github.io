@@ -5,8 +5,8 @@
     </head>
     <script src="allergy.js"></script>
     <script type="text/javascript">
-        const allergy_IgE_keys = allergy_IgE.keys();
-        const allergy_nonIgE_keys = allergy_nonIgE.keys();
+        const allergy_IgE_keys = Object.keys(allergy_IgE);
+        const allergy_nonIgE_keys = Object.keys(allergy_nonIgE);
             
         function show_result() {
             let parameter = document.getElementById("param").value;

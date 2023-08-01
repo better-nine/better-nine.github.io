@@ -9,6 +9,9 @@
         const allergy_nonIgE_keys = Object.keys(allergy_nonIgE);
             
         function show_result() {
+            document.getElementById("ige_result").innerHTML = "";
+            document.getElementById("nonige_result").innerHTML = "";
+            
             let parameter = document.getElementById("param").value;
             
             document.getElementById("ige_result").innerHTML = compare_IgE_key(parameter);

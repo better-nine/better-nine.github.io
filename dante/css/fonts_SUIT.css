@@ -1,0 +1,73 @@
+@charset "utf-8";
+
+@font-face {
+	font-family: 'SUIT';
+	font-weight: 900;
+	font-display: swap;
+    font-style: normal;
+	src: local('SUIT Heavy'), url('../fonts/SUIT-Heavy.woff2') format('woff2'), url('../fonts/SUIT-Heavy.otf') format('embedded-opentype');
+}
+
+@font-face {
+	font-family: 'SUIT';
+	font-weight: 800;
+	font-display: swap;
+    font-style: normal;
+	src: local('SUIT ExtraBold'), url('../fonts/SUIT-ExtraBold.woff2') format('woff2'), url('../fonts/SUIT-ExtraBold.otf') format('embedded-opentype');
+}
+
+@font-face {
+	font-family: 'SUIT';
+	font-weight: 700;
+	font-display: swap;
+    font-style: normal;
+	src: local('SUIT Bold'), url('../fonts/SUIT-Bold.woff2') format('woff2'), url('../fonts/SUIT-Bold.otf') format('embedded-opentype');
+}
+
+@font-face {
+	font-family: 'SUIT';
+	font-weight: 600;
+	font-display: swap;
+    font-style: normal;
+	src: local('SUIT SemiBold'), url('../fonts/SUIT-SemiBold.woff2') format('woff2'), url('../fonts/SUIT-SemiBold.otf') format('embedded-opentype');
+}
+
+@font-face {
+	font-family: 'SUIT';
+	font-weight: 500;
+	font-display: swap;
+    font-style: normal;
+	src: local('SUIT Medium'), url('../fonts/SUIT-Medium.woff2') format('woff2'), url('../fonts/SUIT-Medium.otf') format('embedded-opentype');
+}
+
+@font-face {
+	font-family: 'SUIT';
+	font-weight: 400;
+	font-display: swap;
+    font-style: normal;
+	src: local('SUIT Regular'), url('../fonts/SUIT-Regular.woff2') format('woff2'), url('../fonts/SUIT-Regular.otf') format('embedded-opentype');
+}
+
+@font-face {
+	font-family: 'SUIT';
+	font-weight: 300;
+	font-display: swap;
+    font-style: normal;
+	src: local('SUIT Light'), url('../fonts/SUIT-Light.woff2') format('woff2'), url('../fonts/SUIT-Light.otf') format('embedded-opentype');
+}
+
+@font-face {
+	font-family: 'SUIT';
+	font-weight: 200;
+	font-display: swap;
+    font-style: normal;
+	src: local('SUIT ExtraLight'), url('../fonts/SUIT-ExtraLight.woff2') format('woff2'), url('../fonts/SUIT-ExtraLight.otf') format('embedded-opentype');
+}
+
+@font-face {
+	font-family: 'SUIT';
+	font-weight: 100;
+	font-display: swap;
+    font-style: normal;
+	src: local('SUIT Thin'), url('../fonts/SUIT-Thin.woff2') format('woff2'), url('../fonts/SUIT-Thin.otf') format('embedded-opentype');
+}

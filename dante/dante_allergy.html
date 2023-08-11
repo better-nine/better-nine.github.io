@@ -1,9 +1,13 @@
 <html>
     <head>
+        <link rel="stylesheet" href="../dante/css/mainStyle.css">
+        <link rel="stylesheet" href="../dante/css/common.css">
+
         <title>단테 알러지 검사결과</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
     </head>
-    <script src="allergy.js"></script>
+    <script src="../dante/js/jquery-3.6.3.min.js"></script>
+    <script src="../dante/js/allergy.js"></script>
     <script type="text/javascript">
         const allergy_IgE_keys = Object.keys(allergy_IgE);
         const allergy_nonIgE_keys = Object.keys(allergy_nonIgE);
@@ -47,11 +51,214 @@
 
     </script>
     <body>
-        <br/> 수치가 1.0 이상일 경우 먹으면 안됨 / 검사결과가 없는 경우 문의 필요
-        <br/> * 우유는 0이 나오지만 뱃속에서 소화된 후 나오는 효소에 알러지가 있어서 섭취 불가능
-        <br/> <input type="text" id="param" onkeyup="enterkey(event)" /> 
-        <input type="button" value="확인하기" onclick="show_result()" /> 
-        <br/> 즉발성 알러지 수치 : <span id="ige_result"></span>
-        <br/> 지연성 알러지 수치 : <span id="nonige_result"></span>
+        <div class="Wrapper">
+            <!-- Header:s -->
+            <div class="header">
+                <div class="title-area">
+                    <div class="title">
+                        <h1>Dante</h1>
+                    </div>
+                    <a class="tips">
+                        <span>도움말</span>
+                    </a>
+                    <div class="tipbox">
+                        <p>수치가 1.0 이상일 경우 : <em class="mcol1">섭취 불가</em></p>
+                        <p>검사결과가 없는 경우 : 문의 필요</p>
+                        <br>
+                        <p>※ 우유는 수치가 0이지만 뱃속에서 소화된 후 나오는 효소에 알러지가 있어서 <em class="mcol1">섭취 불가</em></p>
+                    </div>
+                </div>
+                <div class="sub-title-area">
+                    <p>Allergy care for Dante</p>
+                    <h1>단테의<br>알러지 검색기</h1>
+                    <p>알러지 수치를 알고싶나요?</p>
+                </div>
+                <div class="searchbox">
+                    <input type="text" id="param" onkeyup="enterkey(event)" placeholder="궁금한 식품을 검색해보세요." onblur="this.placeholder='궁금한 식품을 검색해보세요.'" onfocus="this.placeholder = ''" />
+                    <a href="#none" class="btn-search" onclick="show_result()"></a>
+                </div>
+                <div class="img-dante"></div>
+            </div>
+            <!-- Header:e -->
+
+            <!-- Result Area:s -->
+            <div class="result-area">
+                <div class="result-header">
+                    <ul class="category">
+                        <li class="c1 is-active"><a href="#none" title="선택됨">전체</a></li>
+                        <li class="c2"><a href="#none">과일</a></li>
+                        <li class="c3"><a href="#none">채소</a></li>
+                        <li class="c4"><a href="#none">육류</a></li>
+                        <li class="c5"><a href="#none">수산물</a></li>
+                        <li class="c6"><a href="#none">곡류/견과류</a></li>
+                        <li class="c7"><a href="#none">유제품</a></li>
+                        <li class="c8"><a href="#none">기타</a></li>
+                    </ul>
+                    <h2 class="result-title">전체</h2>
+                </div>
+                <div class="result-wrap">
+                    <div class="result-card">
+                        <div class="category-icon fruit"></div>
+                        <div class="result-data">
+                            <h6 class="food-name">사과</h6>
+                            <p class="allergy-value1">즉발성 알러지 수치<span id="ige_result">0.4</span></p>
+                            <p class="allergy-value2">지연성 알러지 수치<span id="nonige_result" class="txtcolP1">2.2</span></p>
+                        </div>
+                        <div class="notice-mark">
+                            <span class="mark">섭취불가</span>
+                        </div>
+                    </div>
+                    <div class="result-card">
+                        <div class="category-icon vegitable"></div>
+                        <div class="result-data">
+                            <p class="food-name">오이</p>
+                            <p class="allergy-value1">즉발성 알러지 수치<span id="ige_result">0.8</span></p>
+                            <p class="allergy-value2">지연성 알러지 수치<span id="nonige_result">0.4</span></p>
+                        </div>
+                    </div>
+                    <div class="result-card">
+                        <div class="category-icon meat"></div>
+                        <div class="result-data">
+                            <p class="food-name">소고기</p>
+                            <p class="allergy-value1">즉발성 알러지 수치<span id="ige_result">0.0</span></p>
+                            <p class="allergy-value2">지연성 알러지 수치<span id="nonige_result">0.0</span></p>
+                        </div>
+                    </div>
+                    <div class="result-card">
+                        <div class="category-icon fish"></div>
+                        <div class="result-data">
+                            <p class="food-name">새우</p>
+                            <p class="allergy-value1">즉발성 알러지 수치<span id="ige_result">0.1</span></p>
+                            <p class="allergy-value2">지연성 알러지 수치<span id="nonige_result">0.0</span></p>
+                        </div>
+                    </div>
+                    <div class="result-card">
+                        <div class="category-icon grain"></div>
+                        <div class="result-data">
+                            <p class="food-name">렌즈콩</p>
+                            <p class="allergy-value1">즉발성 알러지 수치<span id="ige_result">0.3</span></p>
+                            <p class="allergy-value2">지연성 알러지 수치<span id="nonige_result" class="txtcolP1">5.0</span></p>
+                        </div>
+                        <div class="notice-mark">
+                            <span class="mark">섭취불가</span>
+                        </div>
+                    </div>
+                    <div class="result-card">
+                        <div class="category-icon dairy"></div>
+                        <div class="result-data">
+                            <p class="food-name">우유</p>
+                            <p class="allergy-value1">즉발성 알러지 수치<span id="ige_result">0.0</span></p>
+                            <p class="allergy-value2">지연성 알러지 수치<span id="nonige_result">0.0</span></p>
+                        </div>
+                        <div class="notice-mark">
+                            <span class="mark">섭취불가</span>
+                        </div>
+                    </div>
+                    <div class="result-card">
+                        <div class="category-icon etc"></div>
+                        <div class="result-data">
+                            <p class="food-name">꿀</p>
+                            <p class="allergy-value1">즉발성 알러지 수치<span id="ige_result">0.0</span></p>
+                            <p class="allergy-value2">지연성 알러지 수치<span id="nonige_result" class="txtcolP1">2.1</span></p>
+                        </div>
+                        <div class="notice-mark">
+                            <span class="mark">섭취불가</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Result Area:e -->
+        </div>
+
+        <script type="text/javascript">
+
+        /* 헤더 스크립트:s */
+        /* 헤더 스크립트:e */
+
+        /* 컨텐츠 스크립트:s */
+
+        //가이드 버튼 클릭이벤트
+        $('.tips').on('click', function(){
+            $('.tipbox').toggleClass('move-bounce');
+        });
+        //카테고리 클릭이벤트
+        $('.category').each(function(){
+            $(this).find('> li > a').on('click', function(){
+                $(this).parents('.category').find('li').removeClass('is-active');
+                $(this).parent().addClass('is-active');
+                $(this).parents('.category').find('li > a').attr('title','');
+                $(this).attr('title','선택됨');
+
+                //개별 카테고리 클릭 시 가로스크롤 이동, 문자열 변환
+                var left = $('.category li.is-active').offset().left;
+                var curLeft = $('.category').scrollLeft();
+                // $('.category').animate({scrollLeft : curLeft+left}, 200);
+                if ($('.category li.c1', '.category li.c2').hasClass('is-active')) {
+                    $('.category').animate({scrollLeft : 0}, 400);
+                } else if ($('.category li').not('.c1', 'c2').hasClass('is-active')) {
+                    $('.category').animate({scrollLeft : curLeft+left-20}, 400);
+                } else {
+                    return false;
+                }
+
+            });
+
+            //개별 카테고리 클릭 시 문자열 변환
+            $(this).find('> li > a').on('click', function(){
+                if ($('.c1').hasClass('is-active')) {
+                    $('.result-title').text("전체");
+                } else if ($('.c2').hasClass('is-active')) {
+                    $('.result-title').text("과일");
+                } else if ($('.c3').hasClass('is-active')) {
+                    $('.result-title').text("채소");
+                } else if ($('.c4').hasClass('is-active')) {
+                    $('.result-title').text("육류");
+                } else if ($('.c5').hasClass('is-active')) {
+                    $('.result-title').text("수산물");
+                } else if ($('.c6').hasClass('is-active')) {
+                    $('.result-title').text("곡류/견과류");
+                } else if ($('.c7').hasClass('is-active')) {
+                    $('.result-title').text("유제품");
+                } else if ($('.c8').hasClass('is-active')) {
+                    $('.result-title').text("기타");
+                } else {
+                    return false;
+                }
+            });
+        });
+
+        //마우스 드래그로 스크롤 이동시키기
+        const slider = document.querySelector('.category');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        slider.addEventListener('mousedown', e => {
+            isDown = true;
+            slider.classList.add('active');
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        });
+
+        slider.addEventListener('mouseleave', () => {
+            isDown = false;
+            slider.classList.remove('active');
+        });
+
+        slider.addEventListener('mouseup', () => {
+            isDown = false;
+            slider.classList.remove('active');
+        });
+
+        slider.addEventListener('mousemove', e => {
+            if (!isDown) return; 
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = x - startX;
+            slider.scrollLeft = scrollLeft - walk;
+        });
+        /* 컨텐츠 스크립트:e */
+
+        </script>
     </body>
 </html>

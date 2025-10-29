@@ -126,11 +126,11 @@
         <div id="lbWrap" style="display:none; margin-top:16px;">
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
                 <strong>🏆 리더보드</strong>
-                <select id="lbPeriod" class="pill" style="pointer-events:auto; padding:6px 10px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);">
+                <!--<select id="lbPeriod" class="pill" style="pointer-events:auto; padding:6px 10px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);">
                     <option value="all">전체</option>
                     <option value="week">주간</option>
                     <option value="day">일간</option>
-                </select>
+                </select>-->
             </div>
             <div id="lbList" style="max-height:260px; overflow:auto; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:8px; background:rgba(255,255,255,.04);"></div>
         </div>
@@ -283,7 +283,7 @@
         const playerNameInput = document.getElementById('playerName');
         const lbWrap   = document.getElementById('lbWrap');
         const lbList   = document.getElementById('lbList');
-        const lbPeriod = document.getElementById('lbPeriod');
+        //const lbPeriod = document.getElementById('lbPeriod');
 
         howBtn.addEventListener('click', ()=> how.style.display = (how.style.display==='none')?'block':'none');
         startBtn.addEventListener('click', start);
@@ -292,16 +292,16 @@
         ctaLink.addEventListener('click', (e)=>{ if(!ctaLink.dataset.href){ e.preventDefault(); alert('관리자: 우측 하단 버튼 링크를 data-href에 설정하세요.'); } });
 
         // 리더보드 기간 변경
-        if (lbPeriod) {
-            lbPeriod.addEventListener('change', async () => {
-                try {
-                    const { items } = await getTop({ limit: 50, period: lbPeriod.value });
-                    renderLeaderboard(items);
-                } catch (e) {
-                    if (lbList) lbList.innerHTML = '<div class="ghost">리더보드를 불러올 수 없습니다.</div>';
-                }
-            });
-        }
+        //if (lbPeriod) {
+        //    lbPeriod.addEventListener('change', async () => {
+        //        try {
+        //            const { items } = await getTop({ limit: 50, period: lbPeriod.value });
+        //            renderLeaderboard(items);
+        //        } catch (e) {
+        //            if (lbList) lbList.innerHTML = '<div class="ghost">리더보드를 불러올 수 없습니다.</div>';
+        //       }
+        //   });
+        //}
 
         // 점수 제출
         if (submitBtn) {
@@ -319,7 +319,7 @@
                     const res = await submitScore({ name, score, durationMs });
                     if (res && res.ok) {
                         submitMsg.textContent = '기록 저장 완료!';
-                        const { items } = await getTop({ limit: 50, period: lbPeriod.value || 'all' });
+                        const { items } = await getTop({ limit: 50, period: 'all' });
                         renderLeaderboard(items);
                     } else {
                         submitMsg.textContent = `저장 실패: ${res && res.error ? res.error : 'unknown'}`;
@@ -647,7 +647,7 @@
                 // 리더보드 로딩
                 (async () => {
                     try {
-                        const { items } = await getTop({ limit: 50, period: (lbPeriod && lbPeriod.value) || 'all' });
+                        const { items } = await getTop({ limit: 50, period: 'all' });
                         renderLeaderboard(items);
                     } catch (e) {
                         if (lbList) lbList.innerHTML = '<div class="ghost">리더보드를 불러올 수 없습니다.</div>';

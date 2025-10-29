@@ -249,22 +249,42 @@
             return tag === 'input' || tag === 'textarea' || el.isContentEditable;
         }
 
+        function mapKey(e){
+            const k = (e.key || '').toLowerCase();   // ex) 'w', 'ㅈ', 'arrowup'
+            const c = e.code || '';                  // ex) 'KeyW', 'ArrowUp'
+            return {
+                up:    k === 'arrowup'    || c === 'ArrowUp'  || k === 'w' || c === 'KeyW',
+                down:  k === 'arrowdown'  || c === 'ArrowDown'|| k === 's' || c === 'KeyS',
+                left:  k === 'arrowleft'  || c === 'ArrowLeft'|| k === 'a' || c === 'KeyA',
+                right: k === 'arrowright' || c === 'ArrowRight'||k === 'd' || c === 'KeyD',
+                pause: k === 'p' || c === 'KeyP',
+                restart: k === 'r' || c === 'KeyR',
+            };
+        }
         window.addEventListener('keydown', (e)=>{
-            // ✅ 인풋/텍스트 영역에서는 게임 키 처리 중단
             if (isTypingTarget(e.target)) return;
 
-            if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D','p','P','r','R'].includes(e.key)) {
-                e.preventDefault();
-            }
-            if (e.key==='p' || e.key==='P'){ togglePause(); return; }
-            if (e.key==='r' || e.key==='R'){ restart(); return; }
-            keys.add(e.key.toLowerCase());
+            const m = mapKey(e);
+            if (m.pause){ e.preventDefault(); togglePause(); return; }
+            if (m.restart){ e.preventDefault(); restart(); return; }
+            if (m.up || m.down || m.left || m.right) e.preventDefault();
+
+            if (m.up) keys.add('up');
+            if (m.down) keys.add('down');
+            if (m.left) keys.add('left');
+            if (m.right) keys.add('right');
         });
 
         window.addEventListener('keyup', (e)=>{
             if (isTypingTarget(e.target)) return;
-            keys.delete(e.key.toLowerCase());
+
+            const m = mapKey(e);
+            if (m.up) keys.delete('up');
+            if (m.down) keys.delete('down');
+            if (m.left) keys.delete('left');
+            if (m.right) keys.delete('right');
         });
+
 
 
         // Mobile D-Pad
@@ -434,11 +454,11 @@
             }
 
             // Player movement
-            let ax=0, ay=0;
-            if(keys.has('arrowup')||keys.has('w')||touchDir.up) ay -= 1;
-            if(keys.has('arrowdown')||keys.has('s')||touchDir.down) ay += 1;
-            if(keys.has('arrowleft')||keys.has('a')||touchDir.left) ax -= 1;
-            if(keys.has('arrowright')||keys.has('d')||touchDir.right) ax += 1;
+            let ax = 0, ay = 0;
+            if (keys.has('up')   || touchDir.up)    ay -= 1;
+            if (keys.has('down') || touchDir.down)  ay += 1;
+            if (keys.has('left') || touchDir.left)  ax -= 1;
+            if (keys.has('right')|| touchDir.right) ax += 1;
             const len = Math.hypot(ax,ay)||1;
 
             const curSpeed = player.speed * (state.speedBoost > 0 ? 2 : 1);
@@ -621,21 +641,40 @@
             if (submitWrap) submitWrap.style.display = 'none';
             if (lbWrap) lbWrap.style.display = 'none';
             if (submitMsg) { submitMsg.style.display = 'none'; submitMsg.textContent = ''; }
+            clearControls();
         }
         function togglePause(){ if(!state.running) return; state.paused=!state.paused; pauseBtn.textContent = state.paused? '▶️ Resume':'⏸️ Pause'; if(!state.paused){ lastTs=0; } beep('sine', state.paused?260:420, .05, .04); }
         function restart(){
             reset();
-            state.startedAt = Date.now(); // [NEW]
-            state.paused=false; pauseBtn.textContent='⏸️ Pause';
-            modal.style.display='none'; canvas.focus();
+            state.startedAt = Date.now();
+            state.paused = false;
+            pauseBtn.textContent = '⏸️ Pause';
+            modal.style.display = 'none';
+            canvas.focus();
+            state.running = true;
+            cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(loop);
+
             beep('triangle', 640, .06, .05);
+            clearControls();
         }
+
         function gameOver(win){
             state.running=false; cancelAnimationFrame(rafId);
             const title = win? '🎉 생존 성공!':'💀 유령에게 잡혔어요!';
             const msg = `최종 점수: ${state.score}`;
             showModal(title, msg);
             beep('sawtooth', win? 880:160, .15, .06);
+        }
+
+        function clearControls(){
+            try { keys.clear(); } catch(_) {}
+            if (typeof touchDir === 'object') {
+                touchDir.up = touchDir.down = touchDir.left = touchDir.right = false;
+            }
+            // 이동 잔상까지 즉시 차단
+            player.vx = 0;
+            player.vy = 0;
         }
 
         function showModal(title, msg){
@@ -678,6 +717,7 @@
             // ✅ 닉네임 인풋에 포커스 주기 (약간의 지연이 안정적)
             const ip = document.getElementById('playerName');
             if (ip) setTimeout(()=> ip.focus(), 60);
+            clearControls();
         }
 
         // Focus for keyboard

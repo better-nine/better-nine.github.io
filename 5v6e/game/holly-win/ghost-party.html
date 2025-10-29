@@ -72,6 +72,8 @@
             <li>호박(🎃) +10점, 연속 수집 시 콤보 보너스</li>
             <li>유령과 충돌 시 ❤️ -1 (무적시간 1초)</li>
             <li>난이도는 시간이 지날수록 점점 증가합니다</li>
+            <li>10초마다 <b>사탕(🍬)</b> 등장 — 획득 시 <b>4초간 이동속도 2배</b></li>
+            <li>호박(🎃) <b>5개</b> 수집할 때마다 ⏱ 1초씩 증가 <b>+1</b></li>
         </ul>
         <div class="row">
             <button class="primary" id="startBtn">게임 시작</button>
@@ -122,6 +124,12 @@
             candies:[],
             particles:[],
             last:0,
+
+            // 추가: 스피드 파워업 & 호박 누적
+            speedBoost: 0,         // 남은 부스트 시간(초)
+            powerups: [],          // 🍬 리스트
+            powerupTimer: 0,       // 10초 스폰 타이머
+            pumpkinsCollected: 0,  // 호박 누적 개수
         };
 
         const player = { x:W*0.5, y:H*0.6, r:18, speed:260, vx:0, vy:0 };
@@ -205,10 +213,16 @@
             state.candies.push({x,y,r:14, life:10}); // 10s lifetime
         }
 
+        // 추가: 스피드 사탕(🍬)
+        function spawnPowerup(){
+            const x = rand(40, W-40), y = rand(40, H-40);
+            state.powerups.push({x, y, r:14, life:5}); // 5초 내 미획득 시 소멸
+        }
+
         // Particles
         function burst(x,y,emoji='✨'){
             for(let i=0;i<12;i++){
-                const a = rand(0, Math.PI*2), s = rand(40,140);
+                const a = Math.random()*Math.PI*2, s = rand(40,140);
                 state.particles.push({x,y,vx:Math.cos(a)*s, vy:Math.sin(a)*s, life:0.6, emoji, size:16});
             }
         }
@@ -228,6 +242,11 @@
             state.last += dt;
             state.invuln = Math.max(0, state.invuln - dt);
 
+            // 스피드 부스트 잔여시간 감소
+            if(state.speedBoost > 0){
+                state.speedBoost = Math.max(0, state.speedBoost - dt);
+            }
+
             // Timer
             state.timeLeft = Math.max(0, state.timeLeft - dt);
             if(state.timeLeft<=0){ gameOver(true); }
@@ -236,6 +255,13 @@
             if(state.last> (0.6 - Math.min(0.45, (60 - state.timeLeft)*0.004))){ spawnGhost(); state.last=0; }
             if(Math.random()<0.02){ spawnCandy(); }
 
+            // 10초마다 스피드 사탕 스폰
+            state.powerupTimer += dt;
+            if(state.powerupTimer >= 10){
+                state.powerupTimer = 0;
+                spawnPowerup();
+            }
+
             // Player movement
             let ax=0, ay=0;
             if(keys.has('arrowup')||keys.has('w')||touchDir.up) ay -= 1;
@@ -243,8 +269,12 @@
             if(keys.has('arrowleft')||keys.has('a')||touchDir.left) ax -= 1;
             if(keys.has('arrowright')||keys.has('d')||touchDir.right) ax += 1;
             const len = Math.hypot(ax,ay)||1;
-            player.vx = (ax/len) * player.speed;
-            player.vy = (ay/len) * player.speed;
+
+            // 부스트 적용 속도
+            const curSpeed = player.speed * (state.speedBoost > 0 ? 2 : 1);
+
+            player.vx = (ax/len) * curSpeed;
+            player.vy = (ay/len) * curSpeed;
             player.x = clamp(player.x + player.vx*dt, player.r, W-player.r);
             player.y = clamp(player.y + player.vy*dt, player.r, H-player.r);
 
@@ -258,22 +288,61 @@
             }
             state.ghosts = state.ghosts.filter(g=>!g.dead);
 
-            // Candies
+            // Candies(🎃) 수명 처리
             for(const c of state.candies){ c.life -= dt; if(c.life<=0) c.dead=true; }
 
+            // Powerups(🍬) 수명 처리
+            for(const p of state.powerups){ p.life -= dt; if(p.life<=0) p.dead=true; }
+
             // Collisions
+            // 👻 충돌
             for(const g of state.ghosts){
                 const d = Math.hypot(player.x-g.x, player.y-g.y);
                 if(d < player.r + g.r){
-                    if(state.invuln<=0){ state.lives--; state.invuln=1.0; flash(); beep('sawtooth', 200, .09, .07); burst(player.x, player.y, '💥'); if(state.lives<=0){ gameOver(false); } }
+                    if(state.invuln<=0){
+                        state.lives--; state.invuln=1.0; flash(); beep('sawtooth', 200, .09, .07); burst(player.x, player.y, '💥');
+                        if(state.lives<=0){ gameOver(false); }
+                    }
                 }
             }
-            for(const c of state.candies){
-                const d = Math.hypot(player.x-c.x, player.y-c.y);
-                if(d < player.r + c.r){ c.dead=true; const bonus = 10 + Math.min(50, state.combo*2); state.score += bonus; state.combo++;
-                    popScore(c.x, c.y, `+${bonus}`); beep('triangle', 880, .07, .05); burst(c.x, c.y, '🎆'); }
+
+            // 🎃(호박) 충돌
+            for (const c of state.candies) {
+                const d = Math.hypot(player.x - c.x, player.y - c.y);
+                if (d < player.r + c.r) {
+                    c.dead = true;
+                    const bonus = 10 + Math.min(50, state.combo * 2);
+                    state.score += bonus;
+                    state.combo++;
+
+                    // ✅ 변경: 호박 5개마다 남은 시간 +1초
+                    state.pumpkinsCollected++;
+                    if (state.pumpkinsCollected % 5 === 0) {
+                        state.timeLeft += 1;                          // 1초 증가
+                        popScore(player.x, player.y - 28, '⏱ +1s');
+                        beep('square', 960, .12, .06);
+                        burst(player.x, player.y, '⏱');
+                    }
+
+                    popScore(c.x, c.y, `+${bonus}`);
+                    beep('triangle', 880, .07, .05);
+                    burst(c.x, c.y, '🎆');
+                }
             }
             state.candies = state.candies.filter(c=>!c.dead);
+
+            // 🍬(스피드 사탕) 충돌
+            for(const p of state.powerups){
+                const d = Math.hypot(player.x-p.x, player.y-p.y);
+                if(d < player.r + p.r){
+                    p.dead = true;
+                    state.speedBoost = 4.0; // 4초간 2배 속도
+                    popScore(p.x, p.y, '⚡ SPEED x2');
+                    beep('sine', 1120, .09, .06);
+                    burst(p.x, p.y, '⚡');
+                }
+            }
+            state.powerups = state.powerups.filter(p=>!p.dead);
 
             // Particles
             for(const p of state.particles){ p.life -= dt; p.x += p.vx*dt; p.y += p.vy*dt; }
@@ -298,8 +367,24 @@
             for(let i=0;i<60;i++){ ctx.fillRect(((i*73)%W), ((i*131)%H), 2, 2); }
             ctx.globalAlpha = 1;
 
-            // candies
-            for(const c of state.candies){ drawEmoji('🎃', c.x, c.y, 24); }
+            // candies (🎃)
+            for (const c of state.candies) {
+                const alpha = blinkAlpha(c.life, 1.5, 7);
+                if (alpha === 0) continue;
+                ctx.globalAlpha = alpha;
+                drawEmoji('🎃', c.x, c.y, 24);
+                ctx.globalAlpha = 1;
+            }
+
+            // powerups (🍬)
+            for (const p of state.powerups) {
+                const alpha = blinkAlpha(p.life, 1.5, 7);
+                if (alpha === 0) continue;
+                ctx.globalAlpha = alpha;
+                drawEmoji('🍬', p.x, p.y, 24);
+                ctx.globalAlpha = 1;
+            }
+
 
             // ghosts
             for(const g of state.ghosts){ drawEmoji('👻', g.x, g.y, g.r*2); }
@@ -311,6 +396,16 @@
                 const grd2 = ctx.createLinearGradient(player.x, player.y-player.r, player.x, player.y+player.r);
                 grd2.addColorStop(0, '#2b2b44'); grd2.addColorStop(1, '#6a5acd');
                 ctx.fillStyle = grd2; ctx.fill();
+
+                // 부스트 중일 때 이펙트 링
+                if(state.speedBoost > 0){
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = 'rgba(255, 200, 80, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(player.x, player.y, player.r + 6, 0, Math.PI*2);
+                    ctx.stroke();
+                }
+
                 drawEmoji('🧙‍♀️', player.x, player.y-12, 26);
             }
 
@@ -322,6 +417,13 @@
         }
 
         function drawEmoji(emoji, x, y, size){ ctx.font = `bold ${size}px Apple Color Emoji, \"Segoe UI Emoji\", Noto Color Emoji, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(emoji, x, y); }
+
+        // [NEW] 남은 시간이 threshold(기본 1.5s) 미만이면 깜빡이는 알파(0 또는 1) 반환
+        function blinkAlpha(remain, threshold = 1.5, hz = 7){
+            if (remain >= threshold) return 1;
+            const t = performance.now() / 1000;
+            return Math.sin(t * hz * 2 * Math.PI) > 0 ? 1 : 0; // on/off 토글
+        }
 
         // UI feedbacks
         let flashes=0; function flash(){ flashes=6; }
@@ -343,7 +445,16 @@
             reset(); modal.style.display='none'; canvas.focus(); state.running=true; state.paused=false; lastTs=0; cancelAnimationFrame(rafId); rafId = requestAnimationFrame(loop); beep('square', 520, .08, .05);
         }
         function reset(){
-            state.timeLeft = state.timeLimit; state.score=0; state.combo=0; state.lives=3; state.invuln=0; state.ghosts.length=0; state.candies.length=0; state.particles.length=0; player.x=W*0.5; player.y=H*0.6;
+            state.timeLeft = state.timeLimit; state.score=0; state.combo=0; state.lives=3; state.invuln=0;
+            state.ghosts.length=0; state.candies.length=0; state.particles.length=0;
+
+            // 추가 초기화
+            state.powerups.length = 0;
+            state.powerupTimer = 0;
+            state.speedBoost = 0;
+            state.pumpkinsCollected = 0;
+
+            player.x=W*0.5; player.y=H*0.6;
         }
         function togglePause(){ if(!state.running) return; state.paused=!state.paused; pauseBtn.textContent = state.paused? '▶️ Resume':'⏸️ Pause'; if(!state.paused){ lastTs=0; } beep('sine', state.paused?260:420, .05, .04); }
         function restart(){ reset(); state.paused=false; pauseBtn.textContent='⏸️ Pause'; modal.style.display='none'; canvas.focus(); beep('triangle', 640, .06, .05); }

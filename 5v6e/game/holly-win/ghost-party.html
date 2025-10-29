@@ -35,15 +35,43 @@
         #how{display:none; margin-top:12px; opacity:.9}
         .howline{margin:0 0 6px}
 
-        /* Mobile touch controls */
-        .pad{position:fixed; bottom:16px; left:16px; display:grid; grid-template-columns:repeat(3,56px); grid-template-rows:repeat(3,56px); gap:8px; pointer-events:auto}
-        .pad button{width:56px;height:56px;border-radius:14px;border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:var(--fg); font-weight:700}
-        .pad .empty{opacity:0; pointer-events:none}
+        /* 십자형 D-Pad (모바일 전용) */
+        .pad{
+            position:fixed;
+            bottom:16px;
+            right:16px;        /* ← 왼쪽 대신 오른쪽 배치 */
+            width:160px;
+            height:160px;
+            pointer-events:auto;
+        }
+        .pad-btn{
+            position:absolute;
+            width:56px; height:56px;
+            border-radius:14px;
+            border:1px solid rgba(255,255,255,.12);
+            background:rgba(255,255,255,.05);
+            color:var(--fg); font-weight:700;
+            touch-action:none;            /* 스크롤 방지 */
+        }
+        .pad-up{    left:52px; top:0;     }
+        .pad-down{  left:52px; bottom:0;  }
+        .pad-left{  left:0;    top:52px;  }
+        .pad-right{ right:0;   top:52px;  }
 
-        .cta{position:fixed; right:16px; bottom:16px; pointer-events:auto}
-        .link{padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:var(--fg); text-decoration:none; font-weight:700}
+        /* 중앙 장식 (터치 영역 아님) */
+        .pad-center{
+            position:absolute;
+            left:52px; top:52px;
+            width:56px; height:56px;
+            border-radius:14px;
+            border:1px solid rgba(255,255,255,.08);
+            background:rgba(255,255,255,.03);
+            pointer-events:none;
+        }
 
+        /* 데스크톱에서는 숨김 유지 */
         @media (min-width: 900px){ .pad{display:none} }
+
     </style>
 </head>
 <body>
@@ -87,16 +115,13 @@
 </div>
 
 <!-- Mobile D-Pad -->
+<!-- Mobile D-Pad -->
 <div class="pad" id="pad" aria-hidden="true">
-    <button class="empty" tabindex="-1"></button>
-    <button data-dir="up">⬆️</button>
-    <button class="empty" tabindex="-1"></button>
-    <button data-dir="left">⬅️</button>
-    <button data-dir="down">⬇️</button>
-    <button data-dir="right">➡️</button>
-    <button class="empty" tabindex="-1"></button>
-    <button class="empty" tabindex="-1"></button>
-    <button class="empty" tabindex="-1"></button>
+    <button class="pad-btn pad-up"    data-dir="up"    aria-label="위로">⬆️</button>
+    <button class="pad-btn pad-left"  data-dir="left"  aria-label="왼쪽">⬅️</button>
+    <button class="pad-btn pad-right" data-dir="right" aria-label="오른쪽">➡️</button>
+    <button class="pad-btn pad-down"  data-dir="down"  aria-label="아래로">⬇️</button>
+    <div class="pad-center" aria-hidden="true"></div>
 </div>
 
 <div class="cta"><a class="link" id="ctaLink" href="#" rel="noopener">파티 참가 신청 ✨</a></div>
@@ -148,25 +173,30 @@
 
         // Mobile D-Pad
         const pad = document.getElementById('pad');
-        const touchDir = {up:false,down:false,left:false,right:false};
-        pad.addEventListener('touchstart', onPad, {passive:false});
-        pad.addEventListener('touchend', onPad, {passive:false});
-        pad.addEventListener('touchcancel', onPad, {passive:false});
-        pad.addEventListener('touchmove', onPad, {passive:false});
-        function onPad(e){ e.preventDefault();
-            const bbox = pad.getBoundingClientRect();
-            touchDir.up = touchDir.down = touchDir.left = touchDir.right = false;
-            for(const t of e.touches){
-                const x = t.clientX - bbox.left; const y = t.clientY - bbox.top;
-                const col = Math.round((x/ (56*3 + 16)) * 2); // rough
-                const row = Math.round((y/ (56*3 + 16)) * 2);
-                // positions: (0,1)=up, (1,0)=left, (1,1)=down, (2,1)=right
-                if(row===0 && col===1) touchDir.up=true;
-                if(row===1 && col===0) touchDir.left=true;
-                if(row===1 && col===1) touchDir.down=true;
-                if(row===1 && col===2) touchDir.right=true;
-            }
+        const touchDir = { up:false, down:false, left:false, right:false };
+
+        function setDir(dir, isDown){
+            touchDir[dir] = isDown;
         }
+
+        function bindPadButton(btn){
+            const dir = btn.dataset.dir;
+
+            // 터치
+            btn.addEventListener('touchstart', (e)=>{ e.preventDefault(); setDir(dir, true); }, {passive:false});
+            btn.addEventListener('touchend',   (e)=>{ e.preventDefault(); setDir(dir, false); }, {passive:false});
+            btn.addEventListener('touchcancel',(e)=>{ e.preventDefault(); setDir(dir, false); }, {passive:false});
+
+            // 마우스(에뮬/테스트용)
+            btn.addEventListener('mousedown',  (e)=>{ e.preventDefault(); setDir(dir, true); });
+            ['mouseup','mouseleave','mouseout'].forEach(ev=>{
+                btn.addEventListener(ev, (e)=>{ e.preventDefault(); setDir(dir, false); });
+            });
+        }
+
+        // pad 내부 버튼들 바인딩
+        pad.querySelectorAll('.pad-btn').forEach(bindPadButton);
+
 
         // UI Elements
         const scoreEl = document.getElementById('score');

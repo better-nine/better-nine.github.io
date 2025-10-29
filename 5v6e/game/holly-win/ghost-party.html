@@ -243,12 +243,29 @@
 
         // Keyboard & Touch
         const keys = new Set();
-        window.addEventListener('keydown', (e)=>{ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D','p','P','r','R'].includes(e.key)) e.preventDefault();
-            if(e.key==='p' || e.key==='P'){ togglePause(); return; }
-            if(e.key==='r' || e.key==='R'){ restart(); return; }
+        function isTypingTarget(el){
+            if(!el) return false;
+            const tag = el.tagName?.toLowerCase();
+            return tag === 'input' || tag === 'textarea' || el.isContentEditable;
+        }
+
+        window.addEventListener('keydown', (e)=>{
+            // ✅ 인풋/텍스트 영역에서는 게임 키 처리 중단
+            if (isTypingTarget(e.target)) return;
+
+            if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D','p','P','r','R'].includes(e.key)) {
+                e.preventDefault();
+            }
+            if (e.key==='p' || e.key==='P'){ togglePause(); return; }
+            if (e.key==='r' || e.key==='R'){ restart(); return; }
             keys.add(e.key.toLowerCase());
         });
-        window.addEventListener('keyup', (e)=> keys.delete(e.key.toLowerCase()));
+
+        window.addEventListener('keyup', (e)=>{
+            if (isTypingTarget(e.target)) return;
+            keys.delete(e.key.toLowerCase());
+        });
+
 
         // Mobile D-Pad
         const pad = document.getElementById('pad');
@@ -657,6 +674,10 @@
                 if (submitWrap) submitWrap.style.display = 'none';
                 if (lbWrap) lbWrap.style.display = 'none';
             }
+            modal.style.display='grid';
+            // ✅ 닉네임 인풋에 포커스 주기 (약간의 지연이 안정적)
+            const ip = document.getElementById('playerName');
+            if (ip) setTimeout(()=> ip.focus(), 60);
         }
 
         // Focus for keyboard

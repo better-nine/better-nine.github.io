@@ -43,7 +43,7 @@
         .pad-left{  left:0;    top:52px;  }
         .pad-right{ right:0;   top:52px;  }
         .pad-center{ position:absolute; left:52px; top:52px; width:56px; height:56px; border-radius:14px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03); pointer-events:none; }
-        @media (min-width: 900px){ .pad{display:none} }
+        @media (max-width: 900px){ .pad{display:none} }
 
         /* Leaderboard list rows */
         .lb-row{display:flex; gap:8px; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,.06);}
@@ -55,9 +55,6 @@
         .modal-grid{ display:grid; grid-template-columns: 1.2fr 1fr; gap:16px; align-items:start; }
         @media (max-width: 860px){ .modal-grid{ grid-template-columns: 1fr; } }
     </style>
-
-    <!-- (선택) reCAPTCHA v3 — 사용 시 Site Key 넣기 -->
-    <!-- <script src="https://www.google.com/recaptcha/api.js?render=YOUR_SITE_KEY"></script> -->
 </head>
 <body>
 <div class="wrap">
@@ -179,11 +176,42 @@
             return res.json();
         }
 
-        /* === 리더보드 조회 === */
-        async function getTop({ limit = 50, period = 'all' } = {}){
+        /* === 유틸: 안전한 텍스트 변환 & XSS 이스케이프 === */
+        function toSafeText(value, fallback = 'Anonymous'){
+            let s;
+            if (typeof value === 'string') s = value;
+            else if (value == null) s = fallback;
+            else {
+                try { s = JSON.stringify(value); }
+                catch { s = String(value); }
+            }
+            s = s == null ? fallback : String(s);
+            if (s.length > 32) s = s.slice(0,32);
+            return s.replace(/[<>&]/g, m => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]));
+        }
+
+        /* === 리더보드 조회: 안정 파서 + 콘솔 로깅 === */
+        async function getTop({ limit = 50, period = 'all' } = {}) {
             const url = `${API_URL}?action=top&limit=${limit}&period=${period}`;
-            const res = await fetch(url);
-            return res.json();
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            const status = res.status;
+            const ok = res.ok;
+            const ct = res.headers.get('content-type') || '';
+            const text = await res.text();
+
+            console.debug('[LB][HTTP]', { url, status, ok, contentType: ct });
+            console.debug('[LB][RAW]', text.slice(0, 400));
+
+            let data;
+            try { data = JSON.parse(text); }
+            catch (e) { throw new Error(`Invalid JSON: ${e.message}`); }
+
+            if (!data || !Array.isArray(data.items)) {
+                const err = data && (data.error || data.message);
+                throw new Error(`Bad schema: items missing${err ? ` (${err})` : ''}`);
+            }
+            console.debug('[LB][ITEMS] count', data.items.length, 'sample', data.items.slice(0,3));
+            return data; // { items: [...] }
         }
 
         /* === 리더보드 렌더링 === */
@@ -194,12 +222,17 @@
                 el.innerHTML = '<div class="ghost">데이터가 없습니다.</div>';
                 return;
             }
+            console.debug('[LB][RENDER] first row', list[0]);
             el.innerHTML = list.map(item => {
-                const safeName = (item.name || 'Anonymous').replace(/[<>&]/g, s => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[s]));
-                return `<div class="lb-row"><div class="lb-rank">${item.rank}</div><div class="lb-name">${safeName}</div><div class="lb-score">${item.score}</div></div>`;
+                const safeName = toSafeText(item && item.name, 'Anonymous');
+                const score = Number(item && item.score);
+                const scoreText = Number.isFinite(score) ? score : '0';
+                const rankText = Number.isFinite(Number(item && item.rank)) ? item.rank : '';
+                return `<div class="lb-row"><div class="lb-rank">${rankText}</div><div class="lb-name">${safeName}</div><div class="lb-score">${scoreText}</div></div>`;
             }).join('');
         }
 
+        /* === 로더: 실패 사유도 표기 === */
         async function loadLeaderboard(){
             const lbList = document.getElementById('lbList');
             if (lbList) lbList.innerHTML = '<div class="ghost">불러오는 중...</div>';
@@ -207,7 +240,10 @@
                 const { items } = await getTop({ limit: 50, period: 'all' });
                 renderLeaderboard(items);
             } catch (e) {
-                if (lbList) lbList.innerHTML = '<div class="ghost">리더보드를 불러올 수 없습니다.</div>';
+                console.error('[LB] load failed:', e);
+                if (lbList) {
+                    lbList.innerHTML = `<div class="ghost">리더보드를 불러올 수 없습니다.<br/><small style="opacity:.7">${(e && e.message) ? e.message : 'unknown error'}</small></div>`;
+                }
             }
         }
 
@@ -219,7 +255,6 @@
             last:0, speedBoost:0, powerupTimer:0, pumpkinsCollected:0,
             startedAt:0,
         };
-
         const player = { x:W*0.5, y:H*0.6, r:18, speed:260, vx:0, vy:0 };
 
         function rand(min,max){ return Math.random()*(max-min)+min; }
@@ -251,22 +286,18 @@
         const how       = document.getElementById('how');
         const ctaLink   = document.getElementById('ctaLink');
         const lbRefresh = document.getElementById('lbRefresh');
-        const lbRefreshTop = document.getElementById('lbRefreshTop');
 
         // 제출/리더보드 UI
         const submitWrap = document.getElementById('submitWrap');
         const submitBtn  = document.getElementById('submitBtn');
         const submitMsg  = document.getElementById('submitMsg');
         const playerNameInput = document.getElementById('playerName');
-        const lbWrap   = document.getElementById('lbWrap');
-        const lbList   = document.getElementById('lbList');
 
         howBtn.addEventListener('click', ()=> how.style.display = (how.style.display==='none')?'block':'none');
         startBtn.addEventListener('click', start);
         pauseBtn.addEventListener('click', togglePause);
         restartBtn.addEventListener('click', restart);
         if (lbRefresh) lbRefresh.addEventListener('click', loadLeaderboard);
-        if (lbRefreshTop) lbRefreshTop.addEventListener('click', loadLeaderboard);
 
         ctaLink.addEventListener('click', (e)=>{ if(!ctaLink.dataset.href){ e.preventDefault(); alert('관리자: 우측 하단 버튼 링크를 data-href에 설정하세요.'); } });
 
@@ -298,7 +329,7 @@
             });
         }
 
-        // Helper to let host easily set CTA link via URL query
+        // Helper to set CTA link from ?link=...
         (function initLink(){
             try{ const url = new URL(location.href); const link = url.searchParams.get('link'); if(link){ ctaLink.href = link; ctaLink.dataset.href = '1'; } }catch(err){}
         })();
@@ -308,11 +339,8 @@
             const speed = rand(60, 130) + (60 - state.timeLeft) * 1.5;
             const baseSize = rand(16, 26);
             let growth = 1;
-            if (state.score >= 1500) {
-                growth = 1 + Math.min(1.5, (state.score - 1500) / 1500 * 1.5);
-            } else {
-                growth = Math.max(0.7, state.score / 1500);
-            }
+            if (state.score >= 1500) growth = 1 + Math.min(1.5, (state.score - 1500) / 1500 * 1.5);
+            else growth = Math.max(0.7, state.score / 1500);
             const size = baseSize * growth;
             const edge = Math.floor(rand(0,4));
             let x,y,vx,vy;
@@ -323,7 +351,6 @@
             const len = Math.hypot(vx,vy)||1; vx*=speed/len; vy*=speed/len;
             state.ghosts.push({x,y,vx,vy,r:size});
         }
-
         function spawnCandy(){ const x = rand(40, W-40), y = rand(40, H-40); state.candies.push({x,y,r:14, life:10}); }
         function spawnPowerup(){ const x = rand(40, W-40), y = rand(40, H-40); state.powerups.push({x, y, r:14, life:5}); }
 
@@ -334,10 +361,14 @@
 
         function update(dt){
             if(!state.running || state.paused) return;
-            state.last += dt; state.invuln = Math.max(0, state.invuln - dt);
+
+            state.last += dt;
+            state.invuln = Math.max(0, state.invuln - dt);
             if(state.speedBoost > 0){ state.speedBoost = Math.max(0, state.speedBoost - dt); }
+
             state.timeLeft = Math.max(0, state.timeLeft - dt);
             if(state.timeLeft<=0){ gameOver(true); }
+
             if(state.last> (0.6 - Math.min(0.45, (60 - state.timeLeft)*0.004))){ spawnGhost(); state.last=0; }
             if(Math.random()<0.02){ spawnCandy(); }
             state.powerupTimer += dt; if(state.powerupTimer >= 10){ state.powerupTimer = 0; spawnPowerup(); }
@@ -348,6 +379,7 @@
             if (keys.has('left') || touchDir.left)  ax -= 1;
             if (keys.has('right')|| touchDir.right) ax += 1;
             const len = Math.hypot(ax,ay)||1;
+
             const curSpeed = player.speed * (state.speedBoost > 0 ? 2 : 1);
             player.vx = (ax/len) * curSpeed; player.vy = (ay/len) * curSpeed;
             player.x = clamp(player.x + player.vx*dt, player.r, W-player.r);
@@ -422,7 +454,14 @@
                 const grd2 = ctx.createLinearGradient(player.x, player.y-player.r, player.x, player.y+player.r);
                 grd2.addColorStop(0, '#2b2b44'); grd2.addColorStop(1, '#6a5acd');
                 ctx.fillStyle = grd2; ctx.fill();
-                if(state.speedBoost > 0){ ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255, 200, 80, 0.6)'; ctx.beginPath(); ctx.arc(player.x, player.y, player.r + 6, 0, Math.PI*2); ctx.stroke(); }
+
+                if(state.speedBoost > 0){
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = 'rgba(255, 200, 80, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(player.x, player.y, player.r + 6, 0, Math.PI*2);
+                    ctx.stroke();
+                }
                 drawEmoji('🧙‍♀️', player.x, player.y-12, 26);
             }
             for(const p of state.particles){ ctx.globalAlpha = Math.max(0,p.life*1.4); drawEmoji(p.emoji, p.x, p.y, p.size); ctx.globalAlpha = 1; }
@@ -452,7 +491,6 @@
             state.ghosts.length=0; state.candies.length=0; state.particles.length=0;
             state.powerups.length = 0; state.powerupTimer = 0; state.speedBoost = 0; state.pumpkinsCollected = 0;
             player.x=W*0.5; player.y=H*0.6;
-            // 메인 화면 리더보드는 숨기지 않음
             if (submitWrap) submitWrap.style.display = 'none';
             if (submitMsg) { submitMsg.style.display = 'none'; submitMsg.textContent = ''; }
             clearControls();
@@ -479,7 +517,6 @@
             if (h1) h1.innerText = title;
             if (sub) sub.innerText = msg ? (msg + '  —  R 키로 다시 시작하거나 버튼을 눌러 재시작하세요.') : sub.innerText;
 
-            // 게임오버 시 제출 UI 표시, 리더보드는 항상 표시
             if (title.includes('생존') || title.includes('잡혔어요') || title.includes('최종')) {
                 if (submitWrap) submitWrap.style.display = 'block';
                 if (submitMsg) { submitMsg.style.display = 'none'; submitMsg.textContent = ''; }
@@ -493,12 +530,12 @@
             } else {
                 if (submitWrap) submitWrap.style.display = 'none';
                 // 메인 화면에서도 리더보드는 보임
+                const lbWrap = document.getElementById('lbWrap');
                 if (lbWrap) lbWrap.style.display = 'block';
             }
             clearControls();
         }
 
-        // Focus for keyboard
         canvas.addEventListener('click', ()=> canvas.focus());
 
         // 페이지 로드시 즉시 리더보드 로딩

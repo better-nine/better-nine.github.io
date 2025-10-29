@@ -22,7 +22,7 @@
 
         /* Centered modal */
         .modal{position:fixed; inset:0; display:grid; place-items:center; background:linear-gradient(180deg, rgba(0,0,0,.65), rgba(0,0,0,.4));}
-        .card{width:min(720px,92vw); border-radius:24px; padding:24px; border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg, rgba(16,16,28,.9), rgba(16,16,28,.7)); box-shadow:0 30px 80px rgba(0,0,0,.45)}
+        .card{width:min(820px,92vw); border-radius:24px; padding:24px; border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg, rgba(16,16,28,.9), rgba(16,16,28,.7)); box-shadow:0 30px 80px rgba(0,0,0,.45)}
         h1{margin:0 0 8px; font-size:clamp(28px, 4vw, 40px)}
         .sub{opacity:.85; margin:0 0 16px; line-height:1.5}
         .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
@@ -39,7 +39,7 @@
         .pad{
             position:fixed;
             bottom:16px;
-            right:16px;        /* ← 왼쪽 대신 오른쪽 배치 */
+            right:16px;
             width:160px;
             height:160px;
             pointer-events:auto;
@@ -51,14 +51,12 @@
             border:1px solid rgba(255,255,255,.12);
             background:rgba(255,255,255,.05);
             color:var(--fg); font-weight:700;
-            touch-action:none;            /* 스크롤 방지 */
+            touch-action:none;
         }
         .pad-up{    left:52px; top:0;     }
         .pad-down{  left:52px; bottom:0;  }
         .pad-left{  left:0;    top:52px;  }
         .pad-right{ right:0;   top:52px;  }
-
-        /* 중앙 장식 (터치 영역 아님) */
         .pad-center{
             position:absolute;
             left:52px; top:52px;
@@ -68,11 +66,17 @@
             background:rgba(255,255,255,.03);
             pointer-events:none;
         }
-
-        /* 데스크톱에서는 숨김 유지 */
         @media (min-width: 900px){ .pad{display:none} }
 
+        /* Leaderboard list rows */
+        .lb-row{display:flex; gap:8px; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,.06);}
+        .lb-rank{width:28px; text-align:right; opacity:.8;}
+        .lb-name{flex:1; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+        .lb-score{width:80px; text-align:right;}
     </style>
+
+    <!-- (선택) reCAPTCHA v3 — 사용 시 Site Key 넣기 -->
+    <!-- <script src="https://www.google.com/recaptcha/api.js?render=YOUR_SITE_KEY"></script> -->
 </head>
 <body>
 <div class="wrap">
@@ -101,20 +105,43 @@
             <li>유령과 충돌 시 ❤️ -1 (무적시간 1초)</li>
             <li>난이도는 시간이 지날수록 점점 증가합니다</li>
             <li>10초마다 <b>사탕(🍬)</b> 등장 — 획득 시 <b>4초간 이동속도 2배</b></li>
-            <li>호박(🎃) <b>5개</b> 수집할 때마다 ⏱ 1초씩 증가 <b>+1</b></li>
+            <li>호박(🎃) <b>5개</b> 수집할 때마다 ⏱ 1초 증가</li>
         </ul>
         <div class="row">
             <button class="primary" id="startBtn">게임 시작</button>
             <button class="pill btn" id="howBtn">조작 안내</button>
         </div>
-        <div id="how">
+
+        <!-- [NEW] 점수 제출 & 리더보드 -->
+        <div id="submitWrap" style="display:none; margin-top:12px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <input id="playerName" type="text" maxlength="16"
+                       placeholder="닉네임(최대 16자)"
+                       style="flex:1; min-width:180px; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:var(--fg);" />
+                <button class="primary" id="submitBtn">점수 제출</button>
+            </div>
+            <p class="sub" id="submitMsg" style="margin:8px 0 0 0; display:none;"></p>
+        </div>
+
+        <div id="lbWrap" style="display:none; margin-top:16px;">
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                <strong>🏆 리더보드</strong>
+                <select id="lbPeriod" class="pill" style="pointer-events:auto; padding:6px 10px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);">
+                    <option value="all">전체</option>
+                    <option value="week">주간</option>
+                    <option value="day">일간</option>
+                </select>
+            </div>
+            <div id="lbList" style="max-height:260px; overflow:auto; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:8px; background:rgba(255,255,255,.04);"></div>
+        </div>
+
+        <div id="how" style="display:none;">
             <p class="howline">🔹 <b>키보드</b>: 방향키 또는 WASD 이동, <b>P</b> 일시정지, <b>R</b> 재시작</p>
             <p class="howline">🔹 <b>모바일</b>: 아래 터치 패드로 이동</p>
         </div>
     </div>
 </div>
 
-<!-- Mobile D-Pad -->
 <!-- Mobile D-Pad -->
 <div class="pad" id="pad" aria-hidden="true">
     <button class="pad-btn pad-up"    data-dir="up"    aria-label="위로">⬆️</button>
@@ -135,6 +162,59 @@
         function resize(){ W=window.innerWidth; H=window.innerHeight; canvas.width=W*dpr; canvas.height=H*dpr; canvas.style.width=W+'px'; canvas.style.height=H+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); }
         window.addEventListener('resize', resize, {passive:true}); resize();
 
+        /* === [NEW] 리더보드 연동 상수 === */
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyzjyNONtJFGXLgg50UKH2x3fKmhRcy1hFD8SHgSak8EwWh5cMeLf5bzXIEM-uWqnat/exec';
+        const RECAPTCHA_SITE_KEY = ''; // 사용 시 사이트 키, 미사용 시 빈 문자열
+
+        /* === [NEW] UUID & playerId === */
+        function getOrCreatePlayerId(){
+            const key = 'playerId';
+            let id = localStorage.getItem(key);
+            if(!id){
+                id = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+                );
+                localStorage.setItem(key, id);
+            }
+            return id;
+        }
+
+        /* === [NEW] 점수 제출 === */
+        async function submitScore({ name, score, durationMs }){
+            const playerId = getOrCreatePlayerId();
+            let recaptchaToken = '';
+            if (RECAPTCHA_SITE_KEY && typeof grecaptcha !== 'undefined') {
+                try { recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'submit' }); } catch(_) {}
+            }
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ playerId, name, score, durationMs, recaptchaToken })
+            });
+            return res.json();
+        }
+
+        /* === [NEW] 리더보드 조회 === */
+        async function getTop({ limit = 50, period = 'all' } = {}){
+            const url = `${API_URL}?action=top&limit=${limit}&period=${period}`;
+            const res = await fetch(url);
+            return res.json();
+        }
+
+        /* === [NEW] 리더보드 렌더링 === */
+        function renderLeaderboard(list){
+            const el = document.getElementById('lbList');
+            if (!el) return;
+            if (!list || !list.length) {
+                el.innerHTML = '<div class="ghost">데이터가 없습니다.</div>';
+                return;
+            }
+            el.innerHTML = list.map(item => {
+                const safeName = (item.name || 'Anonymous').replace(/[<>&]/g, s => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[s]));
+                return `<div class="lb-row"><div class="lb-rank">${item.rank}</div><div class="lb-name">${safeName}</div><div class="lb-score">${item.score}</div></div>`;
+            }).join('');
+        }
+
         // --- Game State ---
         const state = {
             running:false,
@@ -147,14 +227,13 @@
             invuln:0,
             ghosts:[],
             candies:[],
+            powerups:[],
             particles:[],
             last:0,
-
-            // 추가: 스피드 파워업 & 호박 누적
-            speedBoost: 0,         // 남은 부스트 시간(초)
-            powerups: [],          // 🍬 리스트
-            powerupTimer: 0,       // 10초 스폰 타이머
-            pumpkinsCollected: 0,  // 호박 누적 개수
+            speedBoost:0,
+            powerupTimer:0,
+            pumpkinsCollected:0,
+            startedAt:0, // [NEW] 시작 시각(ms)
         };
 
         const player = { x:W*0.5, y:H*0.6, r:18, speed:260, vx:0, vy:0 };
@@ -174,47 +253,84 @@
         // Mobile D-Pad
         const pad = document.getElementById('pad');
         const touchDir = { up:false, down:false, left:false, right:false };
-
-        function setDir(dir, isDown){
-            touchDir[dir] = isDown;
-        }
-
+        function setDir(dir, isDown){ touchDir[dir] = isDown; }
         function bindPadButton(btn){
             const dir = btn.dataset.dir;
-
-            // 터치
             btn.addEventListener('touchstart', (e)=>{ e.preventDefault(); setDir(dir, true); }, {passive:false});
             btn.addEventListener('touchend',   (e)=>{ e.preventDefault(); setDir(dir, false); }, {passive:false});
             btn.addEventListener('touchcancel',(e)=>{ e.preventDefault(); setDir(dir, false); }, {passive:false});
-
-            // 마우스(에뮬/테스트용)
             btn.addEventListener('mousedown',  (e)=>{ e.preventDefault(); setDir(dir, true); });
-            ['mouseup','mouseleave','mouseout'].forEach(ev=>{
-                btn.addEventListener(ev, (e)=>{ e.preventDefault(); setDir(dir, false); });
-            });
+            ['mouseup','mouseleave','mouseout'].forEach(ev=> btn.addEventListener(ev, (e)=>{ e.preventDefault(); setDir(dir, false); }));
         }
-
-        // pad 내부 버튼들 바인딩
         pad.querySelectorAll('.pad-btn').forEach(bindPadButton);
 
-
         // UI Elements
-        const scoreEl = document.getElementById('score');
-        const livesEl = document.getElementById('lives');
-        const timeEl = document.getElementById('time');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const restartBtn = document.getElementById('restartBtn');
-        const modal = document.getElementById('modal');
-        const startBtn = document.getElementById('startBtn');
-        const howBtn = document.getElementById('howBtn');
-        const how = document.getElementById('how');
-        const ctaLink = document.getElementById('ctaLink');
+        const scoreEl   = document.getElementById('score');
+        const livesEl   = document.getElementById('lives');
+        const timeEl    = document.getElementById('time');
+        const pauseBtn  = document.getElementById('pauseBtn');
+        const restartBtn= document.getElementById('restartBtn');
+        const modal     = document.getElementById('modal');
+        const startBtn  = document.getElementById('startBtn');
+        const howBtn    = document.getElementById('howBtn');
+        const how       = document.getElementById('how');
+        const ctaLink   = document.getElementById('ctaLink');
+
+        // [NEW] 제출/리더보드 UI
+        const submitWrap = document.getElementById('submitWrap');
+        const submitBtn  = document.getElementById('submitBtn');
+        const submitMsg  = document.getElementById('submitMsg');
+        const playerNameInput = document.getElementById('playerName');
+        const lbWrap   = document.getElementById('lbWrap');
+        const lbList   = document.getElementById('lbList');
+        const lbPeriod = document.getElementById('lbPeriod');
 
         howBtn.addEventListener('click', ()=> how.style.display = (how.style.display==='none')?'block':'none');
         startBtn.addEventListener('click', start);
         pauseBtn.addEventListener('click', togglePause);
         restartBtn.addEventListener('click', restart);
         ctaLink.addEventListener('click', (e)=>{ if(!ctaLink.dataset.href){ e.preventDefault(); alert('관리자: 우측 하단 버튼 링크를 data-href에 설정하세요.'); } });
+
+        // 리더보드 기간 변경
+        if (lbPeriod) {
+            lbPeriod.addEventListener('change', async () => {
+                try {
+                    const { items } = await getTop({ limit: 50, period: lbPeriod.value });
+                    renderLeaderboard(items);
+                } catch (e) {
+                    if (lbList) lbList.innerHTML = '<div class="ghost">리더보드를 불러올 수 없습니다.</div>';
+                }
+            });
+        }
+
+        // 점수 제출
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async () => {
+                submitBtn.disabled = true;
+                submitMsg.style.display = 'block';
+                submitMsg.textContent = '제출 중...';
+
+                const name = (playerNameInput.value || '').trim() || 'Anonymous';
+                localStorage.setItem('playerName', name);
+                const score = state.score;
+                const durationMs = Math.max(0, Date.now() - (state.startedAt || Date.now()));
+
+                try {
+                    const res = await submitScore({ name, score, durationMs });
+                    if (res && res.ok) {
+                        submitMsg.textContent = '기록 저장 완료!';
+                        const { items } = await getTop({ limit: 50, period: lbPeriod.value || 'all' });
+                        renderLeaderboard(items);
+                    } else {
+                        submitMsg.textContent = `저장 실패: ${res && res.error ? res.error : 'unknown'}`;
+                    }
+                } catch (err) {
+                    submitMsg.textContent = '저장 중 오류가 발생했습니다.';
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            });
+        }
 
         // Helper to let host easily set CTA link via URL query
         (function initLink(){
@@ -229,24 +345,16 @@
         function spawnGhost(){
             const speed = rand(60, 130) + (60 - state.timeLeft) * 1.5;
 
-            // ✅ 점수 기반 유령 크기 조정
-            //  - 점수 0일 때 기본 크기 (rand 16~26)
-            //  - 점수 1500 이상부터 최대 약 2.5배까지 커짐
+            // 점수 기반 유령 크기
             const baseSize = rand(16, 26);
             let growth = 1;
-
             if (state.score >= 1500) {
-                // 1500점 이상일 때부터 점점 커지게 (최대 2.5배)
-                growth = 1 + Math.min(1.5, (state.score - 1500) / 1500 * 1.5);
-                // 예: 1500점 → 1배, 3000점 → 2.5배(최대)
+                growth = 1 + Math.min(1.5, (state.score - 1500) / 1500 * 1.5); // 최대 2.5배
             } else {
-                // 1500점 미만은 점수에 비례해서 살짝 더 작게 (최대 0.7배)
-                growth = Math.max(0.7, state.score / 1500);
+                growth = Math.max(0.7, state.score / 1500); // 저점일수록 작게(최소 0.7배)
             }
-
             const size = baseSize * growth;
 
-            // 기존 코드 유지
             const edge = Math.floor(rand(0,4));
             let x,y,vx,vy;
             if(edge===0){ x=rand(0,W); y=-40; vx=rand(-1,1); vy=1; }
@@ -257,16 +365,14 @@
             state.ghosts.push({x,y,vx,vy,r:size});
         }
 
-
         function spawnCandy(){
             const x = rand(40, W-40), y = rand(40, H-40);
             state.candies.push({x,y,r:14, life:10}); // 10s lifetime
         }
 
-        // 추가: 스피드 사탕(🍬)
         function spawnPowerup(){
             const x = rand(40, W-40), y = rand(40, H-40);
-            state.powerups.push({x, y, r:14, life:5}); // 5초 내 미획득 시 소멸
+            state.powerups.push({x, y, r:14, life:5}); // 5s lifetime
         }
 
         // Particles
@@ -277,7 +383,7 @@
             }
         }
 
-        // Audio (Web Audio API, tiny blips)
+        // Audio (Web Audio API)
         const AudioCtx = window.AudioContext || window.webkitAudioContext; let actx;
         function beep(type='square', f=660, t=0.07, v=0.05){
             if(!actx) actx = new AudioCtx();
@@ -285,14 +391,12 @@
             o.type=type; o.frequency.value=f; g.gain.value=v; o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+t);
         }
 
-        // Game loop
         function update(dt){
             if(!state.running || state.paused) return;
 
             state.last += dt;
             state.invuln = Math.max(0, state.invuln - dt);
 
-            // 스피드 부스트 잔여시간 감소
             if(state.speedBoost > 0){
                 state.speedBoost = Math.max(0, state.speedBoost - dt);
             }
@@ -320,9 +424,7 @@
             if(keys.has('arrowright')||keys.has('d')||touchDir.right) ax += 1;
             const len = Math.hypot(ax,ay)||1;
 
-            // 부스트 적용 속도
             const curSpeed = player.speed * (state.speedBoost > 0 ? 2 : 1);
-
             player.vx = (ax/len) * curSpeed;
             player.vy = (ay/len) * curSpeed;
             player.x = clamp(player.x + player.vx*dt, player.r, W-player.r);
@@ -332,20 +434,16 @@
             for(const g of state.ghosts){
                 g.x += g.vx*dt; g.y += g.vy*dt;
                 if(g.x<-60||g.x>W+60||g.y<-60||g.y>H+60) g.dead=true;
-                // slight homing
                 const dx = player.x - g.x, dy = player.y - g.y; const d = Math.hypot(dx,dy)||1;
                 const steer = 20 * dt; g.vx += (dx/d)*steer; g.vy += (dy/d)*steer;
             }
             state.ghosts = state.ghosts.filter(g=>!g.dead);
 
-            // Candies(🎃) 수명 처리
+            // Candies / Powerups lifetime
             for(const c of state.candies){ c.life -= dt; if(c.life<=0) c.dead=true; }
-
-            // Powerups(🍬) 수명 처리
             for(const p of state.powerups){ p.life -= dt; if(p.life<=0) p.dead=true; }
 
             // Collisions
-            // 👻 충돌
             for(const g of state.ghosts){
                 const d = Math.hypot(player.x-g.x, player.y-g.y);
                 if(d < player.r + g.r){
@@ -356,7 +454,7 @@
                 }
             }
 
-            // 🎃(호박) 충돌
+            // 🎃 pick
             for (const c of state.candies) {
                 const d = Math.hypot(player.x - c.x, player.y - c.y);
                 if (d < player.r + c.r) {
@@ -365,10 +463,10 @@
                     state.score += bonus;
                     state.combo++;
 
-                    // ✅ 변경: 호박 5개마다 남은 시간 +1초
+                    // 5개마다 1초 추가
                     state.pumpkinsCollected++;
                     if (state.pumpkinsCollected % 5 === 0) {
-                        state.timeLeft += 1;                          // 1초 증가
+                        state.timeLeft += 1;
                         popScore(player.x, player.y - 28, '⏱ +1s');
                         beep('square', 960, .12, .06);
                         burst(player.x, player.y, '⏱');
@@ -381,7 +479,7 @@
             }
             state.candies = state.candies.filter(c=>!c.dead);
 
-            // 🍬(스피드 사탕) 충돌
+            // 🍬 pick
             for(const p of state.powerups){
                 const d = Math.hypot(player.x-p.x, player.y-p.y);
                 if(d < player.r + p.r){
@@ -417,7 +515,7 @@
             for(let i=0;i<60;i++){ ctx.fillRect(((i*73)%W), ((i*131)%H), 2, 2); }
             ctx.globalAlpha = 1;
 
-            // candies (🎃)
+            // 🎃
             for (const c of state.candies) {
                 const alpha = blinkAlpha(c.life, 1.5, 7);
                 if (alpha === 0) continue;
@@ -426,7 +524,7 @@
                 ctx.globalAlpha = 1;
             }
 
-            // powerups (🍬)
+            // 🍬
             for (const p of state.powerups) {
                 const alpha = blinkAlpha(p.life, 1.5, 7);
                 if (alpha === 0) continue;
@@ -435,8 +533,7 @@
                 ctx.globalAlpha = 1;
             }
 
-
-            // ghosts
+            // 👻
             for(const g of state.ghosts){ drawEmoji('👻', g.x, g.y, g.r*2); }
 
             // player
@@ -447,7 +544,6 @@
                 grd2.addColorStop(0, '#2b2b44'); grd2.addColorStop(1, '#6a5acd');
                 ctx.fillStyle = grd2; ctx.fill();
 
-                // 부스트 중일 때 이펙트 링
                 if(state.speedBoost > 0){
                     ctx.lineWidth = 3;
                     ctx.strokeStyle = 'rgba(255, 200, 80, 0.6)';
@@ -455,7 +551,6 @@
                     ctx.arc(player.x, player.y, player.r + 6, 0, Math.PI*2);
                     ctx.stroke();
                 }
-
                 drawEmoji('🧙‍♀️', player.x, player.y-12, 26);
             }
 
@@ -466,13 +561,13 @@
             ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.strokeRect(1,1,W-2,H-2);
         }
 
-        function drawEmoji(emoji, x, y, size){ ctx.font = `bold ${size}px Apple Color Emoji, \"Segoe UI Emoji\", Noto Color Emoji, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(emoji, x, y); }
+        function drawEmoji(emoji, x, y, size){ ctx.font = `bold ${size}px Apple Color Emoji, "Segoe UI Emoji", Noto Color Emoji, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(emoji, x, y); }
 
-        // [NEW] 남은 시간이 threshold(기본 1.5s) 미만이면 깜빡이는 알파(0 또는 1) 반환
+        // 깜빡임 알파
         function blinkAlpha(remain, threshold = 1.5, hz = 7){
             if (remain >= threshold) return 1;
             const t = performance.now() / 1000;
-            return Math.sin(t * hz * 2 * Math.PI) > 0 ? 1 : 0; // on/off 토글
+            return Math.sin(t * hz * 2 * Math.PI) > 0 ? 1 : 0;
         }
 
         // UI feedbacks
@@ -492,26 +587,76 @@
         }
 
         function start(){
-            reset(); modal.style.display='none'; canvas.focus(); state.running=true; state.paused=false; lastTs=0; cancelAnimationFrame(rafId); rafId = requestAnimationFrame(loop); beep('square', 520, .08, .05);
+            reset();
+            state.startedAt = Date.now(); // [NEW]
+            modal.style.display='none'; canvas.focus();
+            state.running=true; state.paused=false; lastTs=0;
+            cancelAnimationFrame(rafId); rafId = requestAnimationFrame(loop);
+            beep('square', 520, .08, .05);
         }
         function reset(){
             state.timeLeft = state.timeLimit; state.score=0; state.combo=0; state.lives=3; state.invuln=0;
             state.ghosts.length=0; state.candies.length=0; state.particles.length=0;
-
-            // 추가 초기화
-            state.powerups.length = 0;
-            state.powerupTimer = 0;
-            state.speedBoost = 0;
-            state.pumpkinsCollected = 0;
-
+            state.powerups.length = 0; state.powerupTimer = 0; state.speedBoost = 0; state.pumpkinsCollected = 0;
             player.x=W*0.5; player.y=H*0.6;
+
+            // 모달 내 UI 초기화
+            if (submitWrap) submitWrap.style.display = 'none';
+            if (lbWrap) lbWrap.style.display = 'none';
+            if (submitMsg) { submitMsg.style.display = 'none'; submitMsg.textContent = ''; }
         }
         function togglePause(){ if(!state.running) return; state.paused=!state.paused; pauseBtn.textContent = state.paused? '▶️ Resume':'⏸️ Pause'; if(!state.paused){ lastTs=0; } beep('sine', state.paused?260:420, .05, .04); }
-        function restart(){ reset(); state.paused=false; pauseBtn.textContent='⏸️ Pause'; modal.style.display='none'; canvas.focus(); beep('triangle', 640, .06, .05); }
-        function gameOver(win){ state.running=false; cancelAnimationFrame(rafId); const title = win? '🎉 생존 성공!':'💀 유령에게 잡혔어요!'; const msg = `최종 점수: ${state.score}`; showModal(title, msg); beep('sawtooth', win? 880:160, .15, .06); }
+        function restart(){
+            reset();
+            state.startedAt = Date.now(); // [NEW]
+            state.paused=false; pauseBtn.textContent='⏸️ Pause';
+            modal.style.display='none'; canvas.focus();
+            beep('triangle', 640, .06, .05);
+        }
+        function gameOver(win){
+            state.running=false; cancelAnimationFrame(rafId);
+            const title = win? '🎉 생존 성공!':'💀 유령에게 잡혔어요!';
+            const msg = `최종 점수: ${state.score}`;
+            showModal(title, msg);
+            beep('sawtooth', win? 880:160, .15, .06);
+        }
 
         function showModal(title, msg){
-            modal.style.display='grid'; modal.querySelector('h1').innerText = title; modal.querySelector('.sub').innerText = msg + '  —  R 키로 다시 시작하거나 버튼을 눌러 재시작하세요.';
+            modal.style.display='grid';
+            const h1 = modal.querySelector('h1');
+            const sub = modal.querySelector('.sub');
+            h1.innerText = title;
+            sub.innerText = msg + '  —  R 키로 다시 시작하거나 버튼을 눌러 재시작하세요.';
+
+            // 게임오버 시 제출 UI & 리더보드 표시
+            if (title.includes('생존') || title.includes('잡혔어요') || title.includes('최종')) {
+                if (submitWrap) submitWrap.style.display = 'block';
+                if (lbWrap) lbWrap.style.display = 'block';
+                if (submitMsg) { submitMsg.style.display = 'none'; submitMsg.textContent = ''; }
+
+                // 이름 자동 복원
+                if (playerNameInput) {
+                    const prev = localStorage.getItem('playerName') || '';
+                    if (prev) playerNameInput.value = prev;
+                    playerNameInput.focus();
+                    playerNameInput.addEventListener('change', () => {
+                        localStorage.setItem('playerName', playerNameInput.value || '');
+                    }, { once:false });
+                }
+
+                // 리더보드 로딩
+                (async () => {
+                    try {
+                        const { items } = await getTop({ limit: 50, period: (lbPeriod && lbPeriod.value) || 'all' });
+                        renderLeaderboard(items);
+                    } catch (e) {
+                        if (lbList) lbList.innerHTML = '<div class="ghost">리더보드를 불러올 수 없습니다.</div>';
+                    }
+                })();
+            } else {
+                if (submitWrap) submitWrap.style.display = 'none';
+                if (lbWrap) lbWrap.style.display = 'none';
+            }
         }
 
         // Focus for keyboard

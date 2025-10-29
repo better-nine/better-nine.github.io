@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>🎃 유령 피하기 - Halloween Mini Game</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="game.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+    <canvas id="game" tabindex="0" aria-label="유령 피하기 게임 캔버스"></canvas>
+</div>
+
+<!-- HUD -->
+<div class="hud" aria-hidden="true">
+    <div class="hud-inner">
+        <div class="pill score" id="score">점수 000</div>
+        <div class="pill" id="status">❤️ × <span id="lives">3</span> &nbsp; ⏳ <span id="time">60</span>s</div>
+        <div class="btns">
+            <button class="pill btn" id="pauseBtn" title="일시정지(P)">⏸️ Pause</button>
+            <button class="pill btn" id="restartBtn" title="다시 시작(R)">🔁 Restart</button>
+        </div>
+    </div>
+</div>
+
+<!-- Start / GameOver Modal -->
+<div class="modal" id="modal">
+    <div class="card">
+        <h1>👻 유령 피하기</h1>
+        <p class="sub">방향키(또는 <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span>)로 움직여 <b>유령(👻)을 피하고</b> <b>호박(🎃)</b>을 모아 점수를 올리세요! 제한 시간 <b>60초</b> 동안 생존하세요.</p>
+        <ul class="rules">
+            <li>호박(🎃) +10점, 연속 수집 시 콤보 보너스</li>
+            <li>유령과 충돌 시 ❤️ -1 (무적시간 1초)</li>
+            <li>난이도는 시간이 지날수록 점점 증가합니다</li>
+        </ul>
+        <div class="row">
+            <button class="primary" id="startBtn">게임 시작</button>
+            <button class="pill btn" id="howBtn">조작 안내</button>
+        </div>
+        <div id="how">
+            <p class="howline">🔹 <b>키보드</b>: 방향키 또는 WASD 이동, <b>P</b> 일시정지, <b>R</b> 재시작</p>
+            <p class="howline">🔹 <b>모바일</b>: 아래 터치 패드로 이동</p>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile D-Pad -->
+<div class="pad" id="pad" aria-hidden="true">
+    <button class="empty" tabindex="-1"></button>
+    <button data-dir="up">⬆️</button>
+    <button class="empty" tabindex="-1"></button>
+    <button data-dir="left">⬅️</button>
+    <button data-dir="down">⬇️</button>
+    <button data-dir="right">➡️</button>
+    <button class="empty" tabindex="-1"></button>
+    <button class="empty" tabindex="-1"></button>
+    <button class="empty" tabindex="-1"></button>
+</div>
+
+<div class="cta"><a class="link" id="ctaLink" href="#" rel="noopener">파티 참가 신청 ✨</a></div>
+</body>
+</html>

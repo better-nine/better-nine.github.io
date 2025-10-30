@@ -134,8 +134,6 @@
     <div class="pad-center" aria-hidden="true"></div>
 </div>
 
-<div class="cta"><a class="link" id="ctaLink" href="#" rel="noopener">파티 참가 신청 ✨</a></div>
-
 <script>
     (function(){
         const canvas = document.getElementById('game');
@@ -299,7 +297,9 @@
         restartBtn.addEventListener('click', restart);
         if (lbRefresh) lbRefresh.addEventListener('click', loadLeaderboard);
 
-        ctaLink.addEventListener('click', (e)=>{ if(!ctaLink.dataset.href){ e.preventDefault(); alert('관리자: 우측 하단 버튼 링크를 data-href에 설정하세요.'); } });
+        if (ctaLink) {
+            ctaLink.addEventListener('click', (e)=>{ if(!ctaLink.dataset.href){ e.preventDefault(); alert('관리자: 우측 하단 버튼 링크를 data-href에 설정하세요.'); } });
+        }
 
         // 점수 제출
         if (submitBtn) {
@@ -331,6 +331,7 @@
 
         // Helper to set CTA link from ?link=...
         (function initLink(){
+            if (!ctaLink) return;
             try{ const url = new URL(location.href); const link = url.searchParams.get('link'); if(link){ ctaLink.href = link; ctaLink.dataset.href = '1'; } }catch(err){}
         })();
 

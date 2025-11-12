@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>새 집 들어왔어요! 🏠</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Toto, Arial, sans-serif;
+            background: linear-gradient(135deg, #8f929a 0%, #0ba9ae 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .door-container {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            perspective: 1500px;
+            cursor: pointer;
+        }
+
+        .door-frame {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #8B4513;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .door {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to bottom, #CD853F 0%, #8B4513 100%);
+            transition: transform 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform-origin: left center;
+            border-radius: 10px 0 0 0;
+            box-shadow: inset -5px 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+        }
+
+        .door.left {
+            left: 0;
+            border-right: 2px solid #654321;
+        }
+
+        .door.right {
+            right: 0;
+            transform-origin: right center;
+            border-radius: 0 10px 0 0;
+            border-left: 2px solid #654321;
+            background: linear-gradient(to bottom, #CD853F 0%, #8B4513 100%);
+        }
+
+        .door-knob {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: gold;
+            border-radius: 50%;
+            top: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .door.left .door-knob {
+            right: 20px;
+        }
+
+        .door.right .door-knob {
+            left: 20px;
+        }
+
+        .door-icon {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 3;
+            transition: all 0.3s ease;
+        }
+
+        .door-icon:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .door-container.opened .door.left {
+            transform: rotateY(-120deg);
+        }
+
+        .door-container.opened .door.right {
+            transform: rotateY(120deg);
+        }
+
+        .door-container.opened .door-icon {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0);
+        }
+
+        .invitation-content {
+            position: absolute;
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transition-delay: 0.5s;
+            z-index: 0;
+        }
+
+        .door-container.opened ~ .invitation-content {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        .invitation-content h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .invitation-content h2 {
+            color: #764ba2;
+            font-size: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        .info-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .info-section h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-section p {
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .map-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .map-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #f0f;
+            position: absolute;
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .emoji {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="door-container" id="doorContainer">
+        <div class="door-frame"></div>
+        <div class="door left">
+            <div class="door-knob"></div>
+        </div>
+        <div class="door right">
+            <div class="door-knob"></div>
+        </div>
+        <div class="door-icon" id="doorIcon">
+            🏠
+        </div>
+    </div>
+
+    <div class="invitation-content">
+        <h1>🎉 낭니 집들이 (약식) 🎉</h1>
+        <h2>부동산 사기를 당하고 난 후... <br>우여곡절끝에 구한 집을 공개합니다.</h2>
+
+        <div class="info-section">
+            <h3><span class="emoji">📅</span> 일시</h3>
+            <p>2025년 11월 22일 토요일 오후 6시</p>
+        </div>
+
+        <div class="info-section">
+            <h3><span class="emoji">📍</span> 장소</h3>
+            <p>11월 22일 공개<br>
+                </p>
+        </div>
+
+        <div class="info-section">
+            <h3><span class="emoji">💝</span> 메시지</h3>
+            <p>안녕<br>
+                사랑하는 오장육부<br>
+                비록 공간이 좁지만<br>
+                우리집 와서 맛있는거 먹자</p>
+        </div>
+
+        <button class="map-button" onclick="openMap()">
+            📍 지도에서 위치 보기
+        </button>
+    </div>
+</div>
+
+<script>
+    const doorContainer = document.getElementById('doorContainer');
+    const doorIcon = document.getElementById('doorIcon');
+
+    doorContainer.addEventListener('click', function() {
+        if (!doorContainer.classList.contains('opened')) {
+            doorContainer.classList.add('opened');
+            createConfetti();
+        }
+    });
+
+    function createConfetti() {
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#feca57', '#ff9ff3', '#54a0ff'];
+        const confettiCount = 50;
+
+        for (let i = 0; i < confettiCount; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 3000);
+            }, i * 30);
+        }
+    }
+
+    function openMap() {
+        // 실제 주소로 변경하세요
+        const address = '보문파크뷰자이';
+        const encodedAddress = encodeURIComponent(address);
+
+        // 네이버 지도로 열기 (모바일에서는 앱으로, PC에서는 웹으로)
+        window.open(`https://map.naver.com/v5/search/${encodedAddress}`, '_blank');
+
+        // 카카오맵으로 열고 싶다면:
+        // window.open(`https://map.kakao.com/link/search/${encodedAddress}`, '_blank');
+    }
+</script>
+</body>
+</html>

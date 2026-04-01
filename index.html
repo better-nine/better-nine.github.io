@@ -1,9 +1,275 @@
-<html>
+<!DOCTYPE html>
+<html lang="ko">
   <head>
-    <title>83tt3r - n1n3</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>better-nine</title>
+    <style>
+      :root {
+        --bg: #f4efe7;
+        --panel: rgba(255, 250, 242, 0.84);
+        --text: #1c1a17;
+        --muted: #5f5648;
+        --line: rgba(28, 26, 23, 0.12);
+        --accent: #0c7c59;
+        --accent-2: #d95d39;
+        --shadow: 0 24px 60px rgba(28, 26, 23, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Iowan Old Style", "Apple SD Gothic Neo", "Noto Serif KR",
+          serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(217, 93, 57, 0.18), transparent 30%),
+          radial-gradient(circle at top right, rgba(12, 124, 89, 0.16), transparent 28%),
+          linear-gradient(180deg, #f8f4ec 0%, var(--bg) 100%);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 32px 0 64px;
+      }
+
+      .hero {
+        padding: 40px 0 28px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        padding: 8px 14px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        font-size: 0.82rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      h1 {
+        margin: 18px 0 14px;
+        font-size: clamp(3rem, 7vw, 6rem);
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+      }
+
+      .lede {
+        max-width: 720px;
+        font-size: 1.08rem;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 26px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px 18px;
+        border-radius: 999px;
+        text-decoration: none;
+        border: 1px solid transparent;
+        font-size: 0.98rem;
+        transition: transform 160ms ease, box-shadow 160ms ease,
+          border-color 160ms ease;
+      }
+
+      .button.primary {
+        background: var(--text);
+        color: #fff9f2;
+        box-shadow: var(--shadow);
+      }
+
+      .button.secondary {
+        border-color: var(--line);
+        background: rgba(255, 255, 255, 0.66);
+      }
+
+      .button:hover {
+        transform: translateY(-2px);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 16px;
+        margin-top: 34px;
+      }
+
+      .card {
+        grid-column: span 6;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow);
+      }
+
+      .card.featured {
+        grid-column: span 12;
+      }
+
+      .card h2,
+      .card h3 {
+        margin: 0;
+        letter-spacing: -0.03em;
+      }
+
+      .card p {
+        margin: 12px 0 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .kicker {
+        display: inline-block;
+        margin-bottom: 12px;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .kicker.green {
+        color: var(--accent);
+      }
+
+      .kicker.orange {
+        color: var(--accent-2);
+      }
+
+      .links {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .links a {
+        text-decoration: none;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.62);
+      }
+
+      .links strong {
+        display: block;
+        font-size: 1rem;
+      }
+
+      .links span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .footer {
+        margin-top: 28px;
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          width: min(100% - 20px, 1120px);
+          padding-top: 20px;
+        }
+
+        .card,
+        .card.featured {
+          grid-column: span 12;
+        }
+
+        h1 {
+          font-size: clamp(2.6rem, 13vw, 4rem);
+        }
+      }
+    </style>
   </head>
   <body>
-    hi
-    
+    <main class="shell">
+      <section class="hero">
+        <span class="eyebrow">better-nine.github.io</span>
+        <h1>흩어져 있던 페이지를<br />한 화면에 모았습니다.</h1>
+        <p class="lede">
+          이 저장소에는 서로 다른 성격의 정적 페이지와 실험이 함께 들어 있습니다.
+          루트 페이지에서 바로 들어갈 수 있도록 대표 진입점을 정리했습니다.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="/5v6e/you.html">오장육부 보러가기</a>
+          <a class="button secondary" href="/dante/index.html">단테 알러지 검색기</a>
+        </div>
+      </section>
+
+      <section class="grid" aria-label="대표 페이지 목록">
+        <article class="card featured">
+          <span class="kicker green">Featured</span>
+          <h2>주요 페이지 바로가기</h2>
+          <p>
+            기존에는 루트 접속 시 의미 없는 플레이스홀더만 보였지만, 이제 저장소 안의 실제
+            콘텐츠로 이동할 수 있습니다.
+          </p>
+          <div class="links">
+            <a href="/5v6e/you.html">
+              <strong>오장육부 메인</strong>
+              <span>그룹 소개와 기록을 담은 페이지</span>
+            </a>
+            <a href="/5v6e/invitation.html">
+              <strong>집들이 초대장</strong>
+              <span>인터랙션 중심의 초대장 페이지</span>
+            </a>
+            <a href="/5v6e/game/holly-win/ghost-party.html">
+              <strong>Ghost Party 게임</strong>
+              <span>저장소 안의 플레이 가능한 브라우저 게임</span>
+            </a>
+            <a href="/dante/index.html">
+              <strong>단테 알러지 검색기</strong>
+              <span>식품별 알러지 수치를 조회하는 페이지</span>
+            </a>
+          </div>
+        </article>
+
+        <article class="card">
+          <span class="kicker orange">Why This Exists</span>
+          <h3>이슈 #1 대응</h3>
+          <p>
+            사이트의 첫 진입점이 비어 있으면 콘텐츠 품질과 무관하게 전체 저장소가 미완성처럼
+            보입니다. 루트에서 최소한의 안내와 이동 경로를 제공하도록 수정했습니다.
+          </p>
+        </article>
+
+        <article class="card">
+          <span class="kicker green">Next</span>
+          <h3>추가 개선 여지</h3>
+          <p>
+            이후에는 루트 디자인을 더 정교하게 다듬거나, 사용 빈도가 높은 한 페이지를 기본
+            홈으로 승격시키는 방향으로 발전시킬 수 있습니다.
+          </p>
+        </article>
+      </section>
+
+      <p class="footer">
+        Root landing page for the pages and experiments maintained in this repository.
+      </p>
+    </main>
   </body>
 </html>

@@ -1,0 +1,42 @@
+{
+  "2026-05-26": [
+    {
+      "title": "인증 미들웨어 리팩터링",
+      "done": true,
+      "time": "10:00",
+      "detail": "JWT 검증 로직을 별도 모듈로 분리했다.\n\n- 기존: 각 라우터마다 토큰 파싱 중복\n- 변경: `verifyToken` 미들웨어 하나로 통합\n\n```js\nfunction verifyToken(req, res, next) {\n  const token = req.headers.authorization?.split(' ')[1];\n  if (!token) return res.status(401).end();\n  // ...\n}\n```\n\n**배운 점**: 미들웨어 순서가 생각보다 중요했다. 로깅을 인증 앞에 둬야 실패 요청도 기록된다."
+    },
+    {
+      "title": "베이스 기타 연습",
+      "done": true,
+      "time": "21:30",
+      "detail": "스케일 연습 30분. 메트로놈 90bpm으로 메이저 스케일."
+    },
+    {
+      "title": "강아지 훈련 영상 정리",
+      "done": false,
+      "time": null,
+      "detail": "미룸. 내일."
+    }
+  ],
+  "2026-05-27": [
+    {
+      "title": "시스템 설계 문서 작성",
+      "done": false,
+      "time": "14:00",
+      "detail": "새 프로젝트의 아키텍처 결정 기록(ADR)을 작성 중.\n\n다룰 내용:\n1. 데이터 저장 방식 (마크다운 vs DB)\n2. 빌드 파이프라인\n3. 단일 진실 공급원 원칙"
+    },
+    {
+      "title": "보안 취약점 스캔",
+      "done": true,
+      "time": null,
+      "detail": "`npm audit` 돌리고 의존성 업데이트. 고위험 2건 해결."
+    },
+    {
+      "title": "심리학 책 읽기",
+      "done": false,
+      "time": null,
+      "detail": "「생각에 관한 생각」 3장."
+    }
+  ]
+}
